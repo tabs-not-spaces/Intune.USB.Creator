@@ -5,7 +5,7 @@
 A module containing tools to assist with the creation of a bootable WinPE USB used to provision devices for enrollment to Intune.
 
 
-## Pre-Reqs
+:## Pre-Reqs
 
 - [PowerShell 7](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-windows?view=powershell-7)
 - [WindowsAutoPilotIntune](https://www.powershellgallery.com/packages/WindowsAutoPilotIntune)
@@ -40,10 +40,18 @@ Once the provisioning script has completed, removing the USB and rebooting the d
 
 ## What's next?
 
-If time permits, I'm looking to add the following additions to the solution
+If time permits, I'm looking to add the following additions to the solution:
 
 - Warnings and the ability to wipe the USB after use - as this solution is VERY volatile, it may be a good idea to trash the USB after being used.
 - Allowing custom installation media - currently the solution expects that you will use a Windows 10 ISO to extract the install.wim file. I'd like to allow custom *.wim files to be added during the initial process.
+
+## Caveat Emptor
+
+I'm providing this solution as a tool as an educational tool to assist the IT-Pro community with absolutely ZERO warranties or guarantees - I know it works for me, but if it doesn't for you - read the code and fix it..
+
+If you find a problem and want to contribute - please do! I love community involvement and will be as active as my schedule allows.
+
+Lastly, I'm providing a copy of WinPE (which also includes the "Invoke-Provision.ps1" file) on a personal Azure storage account. This will stay up as long as it doesn't begin to cost me too much - if it does, I *will* take it down. If there are better options, please let me know.
 
 ## Release Notes
 
