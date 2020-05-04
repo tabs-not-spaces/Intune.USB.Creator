@@ -1,0 +1,9 @@
+.tests
+bin
+*.exe
+*.msi
+*.nupkg
+*.nuspec
+*.zip
+localenv.ps1
+!module.nuspec

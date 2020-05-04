@@ -1,0 +1,110 @@
+trigger:
+  branches:
+    include:
+      - master
+  paths:
+    include:
+      - /Intune.USB.Creator
+    exclude:
+      - /.gitignore
+      - /readme.md
+      - /.tests
+
+pr:
+  branches:
+    include:
+      - master
+  paths:
+    include:
+      - /Intune.USB.Creator
+    exclude:
+      - /.gitignore
+      - /readme.md
+      - /.tests
+
+stages:
+  - stage: Build
+    jobs:
+      - job: Build
+        pool:
+          vmImage: 'vs2017-win2016'
+        steps:
+          - task: PowerShell@2
+            displayName: Pre-Build
+            inputs:
+              targetType: 'inline'
+              script: |
+                Install-Module -Name Pester -Verbose -Scope CurrentUser -SkipPublisherCheck -Force
+                Install-Module WindowsAutoPilotIntune -Scope CurrentUser -Force
+                Install-Module Microsoft.Graph.Intune -Scope CurrentUser -Force
+              pwsh: true
+
+          - task: PowerShell@2
+            displayName: Build
+            inputs:
+              filePath: './build.ps1'
+              arguments: '-modulePath $(modulePath) -moduleName $(moduleName)'
+              pwsh: true
+
+          - task: PowerShell@2
+            displayName: 'Code Quality Test'
+            inputs:
+              filePath: './tests/codecheck.ps1'
+              pwsh: true
+
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results'
+            inputs:
+              testResultsFormat: 'NUnit'
+              testResultsFiles: 'pester.codecheck.test.xml'
+              searchFolder: '$(System.DefaultWorkingDirectory)/.tests'
+              failTaskOnFailedTests: true
+              testRunTitle: 'Code Quality Test'
+
+          - task: CopyFiles@2
+            inputs:
+              SourceFolder: './bin/release/$(Build.BuildId)'
+              Contents: '**'
+              TargetFolder: '$(Build.ArtifactStagingDirectory)'
+              CleanTargetFolder: true
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish Artifact
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)'
+              artifact: 'release'
+              publishLocation: 'pipeline'
+
+  - stage: Deploy
+    jobs:
+      - deployment: 'Deploy'
+        displayName: 'Publish to PSGallery'
+        pool:
+          vmImage: 'vs2017-win2016'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: PowerShell@2
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      try {
+                        $modules = @(
+                          "WindowsAutoPilotIntune"
+                          "Microsoft.Graph.Intune"
+                        )
+                        foreach ($m in $modules) {
+                          write-host "Installing module: $m.."
+                          Install-Module $m -Scope CurrentUser -Force
+                        }
+                        write-host "Publishing module from: $env:Pipeline_Workspace\release\$env:MODULENAME"
+                        Publish-Module -Path "$env:Pipeline_Workspace\release\$env:MODULENAME" -NuGetApiKey $env:APIKEY
+                      }
+                      catch {
+                        write-warning $_
+                      }
+                    pwsh: true
+                  env:
+                    APIKEY: $(apiKey)
