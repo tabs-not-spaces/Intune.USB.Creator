@@ -27,7 +27,7 @@ function Get-AutopilotPolicy {
                 $apPol = $apPolicies | select-object displayName | Out-ConsoleGridView -passthru
             }
             else {
-                Write-Host "Policy found - saving to $fileDestination.." -ForegroundcccColor Cyan
+                Write-Host "Policy found - saving to $fileDestination.." -ForegroundColor Cyan
                 $apPol = $apPolicies
             }
             $apPol | ConvertTo-AutoPilotConfigurationJSON | Out-File "$fileDestination\AutopilotConfigurationFile.json" -Encoding ascii -Force
