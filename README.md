@@ -1,5 +1,7 @@
 # Intune.USB.Creator
 
+[![Build Status](https://dev.azure.com/powers-hell/Intune.USB.Creator/_apis/build/status/tabs-not-spaces.Intune.USB.Creator?branchName=master)](https://dev.azure.com/powers-hell/Intune.USB.Creator/_build/latest?definitionId=31&branchName=master)
+
 ## Summary
 
 A module containing tools to assist with the creation of a bootable WinPE USB used to provision devices for enrollment to Intune.
