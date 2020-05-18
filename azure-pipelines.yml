@@ -10,18 +10,6 @@ trigger:
       - /readme.md
       - /.tests
 
-pr:
-  branches:
-    include:
-      - master
-  paths:
-    include:
-      - /Intune.USB.Creator
-    exclude:
-      - /.gitignore
-      - /readme.md
-      - /.tests
-
 stages:
   - stage: Build
     jobs:
