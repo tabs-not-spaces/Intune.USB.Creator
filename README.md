@@ -7,11 +7,11 @@
 A module containing tools to assist with the creation of a bootable WinPE USB used to provision devices for enrollment to Intune.
 
 
-:## Pre-Reqs
+## Pre-Reqs
 
 - [PowerShell 7](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-windows?view=powershell-7)
-- [WindowsAutoPilotIntune](https://www.powershellgallery.com/packages/WindowsAutoPilotIntune)
-- [Microsoft.Graph.Intune](https://www.powershellgallery.com/packages/Microsoft.Graph.Intune/)
+- [WindowsAutoPilotIntune](https://www.powershellgallery.com/packages/WindowsAutoPilotIntune) - Installed automatically if missing
+- [Microsoft.Graph.Intune](https://www.powershellgallery.com/packages/Microsoft.Graph.Intune/) - Installed automatically if missing
 - A copy of Windows 10 (Multi-format ISO recommended)
 
 ## How to use
@@ -57,5 +57,11 @@ Lastly, I'm providing a copy of WinPE (which also includes the "Invoke-Provision
 
 ## Release Notes
 
-* v1.0.1.178 - UI improvements - typo fixes
-* v1.0.1.177 - Initial release of module.
+* v1.0.1.280
+  - Updated module dependencies to be auto-installed
+  - Removed support for Out-ConsoleGridView for less required dependencies
+  - Improved windows PowerShell compatibility for modules not natively supported in PowerShell 7.
+* v1.0.1.178
+* - UI improvements - typo fixes
+* v1.0.1.177
+* - Initial release of module.
