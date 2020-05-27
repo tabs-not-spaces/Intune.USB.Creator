@@ -54,7 +54,7 @@ try {
     $t.package.metadata.requireLicenseAcceptance = "false"
     $t.package.metadata.description = (Get-Content $relPath\description.txt -raw).ToString()
     $t.package.metadata.description
-    $t.package.metadata.releaseNotes = (Get-Content $relPath\releaseNotes.txt -raw).ToString()
+    $t.package.metadata.releaseNotes = $releaseNotes.ToString()
     $t.package.metadata.releaseNotes
     $t.package.metadata.copyright = $moduleManifest.copyright.ToString()
     $t.package.metadata.tags = ($moduleManifest.PrivateData.PSData.Tags -join ',').ToString()
