@@ -72,6 +72,10 @@ function Publish-ImageToUSB {
             Write-ToUSB -Path "$($usb.downloadPath)\AutopilotConfigurationFile.json" -Destination "$($usb.drive):\scripts\"
         }
         #endregion
+        #region download provision script and install to usb
+        Write-Host "`nGrabbing provision script from GitHub.." -ForegroundColor Yellow
+        Invoke-RestMethod -Method Get -Uri $script:provisionUrl -OutFile "$($usb.drive):\scripts\Invoke-Provision.ps1"
+        #endregion
         #region download and apply powershell 7 to usb
         Write-Host "`nGrabbing PWSH 7.." -ForegroundColor Yellow
         Invoke-RestMethod -Method Get -Uri 'https://aka.ms/install-powershell.ps1' -OutFile "$env:Temp\install-powershell.ps1"
