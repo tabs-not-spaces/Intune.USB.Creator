@@ -20,7 +20,7 @@ class USBImage {
         $this.installPath = "$($this.installRoot)images"
         $this.cuPath = "$($this.installPath)\CU"
         $this.ssuPath = "$($this.installPath)\SSU"
-        $this.driverPath = "$($this.installPath)\Drivers"
+        $this.driverPath = "$(Split-Path $PSScriptRoot -Parent)\Drivers"
     }
     setScratch ([System.IO.DirectoryInfo]$scratch) {
         $this.scratch = $scratch
@@ -157,7 +157,7 @@ function Set-DrivePartition {
     )
     try {
         $txt = "$winPEDrive\winpart.txt"
-        New-Item $txt -itemType File -force | Out-Null
+        New-Item $txt -ItemType File -Force | Out-Null
         Write-Host "Checking boot system type.." -ForegroundColor Cyan
         $bootType = Test-IsUEFI
         #region Boot type switch
@@ -218,6 +218,37 @@ exit
     }
 
 }
+function Format-USBDisk {
+    [cmdletbinding()]
+    param (
+        [parameter(mandatory = $false)]
+        [string]$winPEDrive = "X:",
+
+        [parameter(mandatory = $false)]
+        [string]$targetDrive = "1"
+    )
+    try {
+        $txt = "$winPEDrive\winpart.txt"
+        New-Item $txt -itemType File -force | Out-Null
+        $winpartCmd = @"
+select disk $targetDrive
+clean
+create partition primary
+active
+format quick fs=ntfs label="PortableUSB"
+assign letter=?
+exit
+"@
+        #region Partition disk
+        $winpartCmd | Out-File $txt -Encoding ascii -Force -NoNewline
+        Write-Host "Formatting target disk.." -ForegroundColor Cyan
+        Invoke-Cmdline -application diskpart -argumentList "/s $txt" -silent
+        #endregion
+    }
+    catch {
+        throw $_
+    }
+}
 function Find-InstallWim {
     [cmdletbinding()]
     param (
@@ -256,7 +287,7 @@ function Add-Driver {
         [string]$driverPath
 
     )
-    if (!(Get-ChildItem "$driverPath\*.msu")) {
+    if (!(Get-ChildItem "$driverPath\*.inf" -Recurse -ErrorAction SilentlyContinue)) {
         Write-Host "No drivers found at path: $driverPath" -ForegroundColor Cyan
     }
     else {
@@ -282,17 +313,95 @@ function Add-Package {
         Invoke-Cmdline -application "DISM" -argumentList "/Image:$scratchDrive /Add-Package /PackagePath:$packagePath /ScratchDir:$scratchPath"
     }
 }
+function Show-WarningShots {
+    [cmdletbinding()]
+    param (
+        [string]$title = 'Windows 10 Imaging USB'
+    )
+    Write-Host "================ $title ================" -ForegroundColor Yellow
+
+    Write-Host "1: Exit" -ForegroundColor Green
+    Write-Host "2: Wipe USB" -ForegroundColor Green
+    Write-Host "3: Install Windows 10 and KEEP USB " -ForegroundColor Green -NoNewline
+    Write-Host "## !!! Destructive !!! ##" -ForegroundColor Red
+    Write-Host "4: Install Windows 10 and DELETE USB " -ForegroundColor Green -NoNewline
+    Write-Host "## !!! Destructive !!! ##" -ForegroundColor Red
+
+    $userInput = Read-Host "Please make a selection.."
+    return $userInput
+}
+function Show-FinalWarningShots {
+    [cmdletbinding()]
+    param (
+        [string]$title = 'WARNING!!!'
+    )
+    Write-Host "================ $title ================" -ForegroundColor RED
+
+    Write-Host "This option will cause irreversible changes to your device - are you sure you want to continue? (Y/N)`n" -ForegroundColor Red
+
+    $userInput = Read-Host "Please make a selection (Y/N)"
+
+    switch ($userInput) {
+        "Y" {
+            return $true
+        }
+        "N" {
+            return $false
+        }
+        default {
+            Clear-Host
+            Show-FinalWarningShots
+        }
+    }
+    return $input
+}
 #endregion
 #region Main process
 try {
     $errorMsg = $null
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
-    #region Initialize and begin process
-    $welcomeScreen = "IF9fICBfXyAgICBfXyAgX19fX19fICBfX19fX18gIF9fX19fXwovXCBcL1wgIi0uLyAgXC9cICBfXyBcL1wgIF9fX1wvXCAgX19fXApcIFwgXCBcIFwtLi9cIFwgXCAgX18gXCBcIFxfXyBcIFwgIF9fXAogXCBcX1wgXF9cIFwgXF9cIFxfXCBcX1wgXF9fX19fXCBcX19fX19cCiAgXC9fL1wvXy8gIFwvXy9cL18vXC9fL1wvX19fX18vXC9fX19fXy8KIF9fX19fICAgX19fX19fICBfX19fX18gIF9fICAgICAgX19fX19fICBfXyAgX18KL1wgIF9fLS4vXCAgX19fXC9cICA9PSBcL1wgXCAgICAvXCAgX18gXC9cIFxfXCBcClwgXCBcL1wgXCBcICBfX1xcIFwgIF8tL1wgXCBcX19fXCBcIFwvXCBcIFxfX19fIFwKIFwgXF9fX18tXCBcX19fX19cIFxfXCAgIFwgXF9fX19fXCBcX19fX19cL1xfX19fX1wKICBcL19fX18vIFwvX19fX18vXC9fLyAgICBcL19fX19fL1wvX19fX18vXC9fX19fXy8KICAgICAgIF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCiAgICAgICBXaW5kb3dzIDEwIERldmljZSBQcm92aXNpb25pbmcgVG9vbAogICAgICAgKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKio="
-    Write-Host $([system.text.encoding]::UTF8.GetString([system.convert]::FromBase64String($welcomeScreen)))
-    #endregion
     #region Set power policy to High Performance
     Set-PowerPolicy -powerPlan HighPerformance
+    #endregion
+    #region Warning shots..
+    $userChoice = $null
+    while ($userChoice -notin 1, 2, 3, 4) {
+        Clear-Host
+        $welcomeScreen = "IF9fICBfXyAgICBfXyAgX19fX19fICBfX19fX18gIF9fX19fXwovXCBcL1wgIi0uLyAgXC9cICBfXyBcL1wgIF9fX1wvXCAgX19fXApcIFwgXCBcIFwtLi9cIFwgXCAgX18gXCBcIFxfXyBcIFwgIF9fXAogXCBcX1wgXF9cIFwgXF9cIFxfXCBcX1wgXF9fX19fXCBcX19fX19cCiAgXC9fL1wvXy8gIFwvXy9cL18vXC9fL1wvX19fX18vXC9fX19fXy8KIF9fX19fICAgX19fX19fICBfX19fX18gIF9fICAgICAgX19fX19fICBfXyAgX18KL1wgIF9fLS4vXCAgX19fXC9cICA9PSBcL1wgXCAgICAvXCAgX18gXC9cIFxfXCBcClwgXCBcL1wgXCBcICBfX1xcIFwgIF8tL1wgXCBcX19fXCBcIFwvXCBcIFxfX19fIFwKIFwgXF9fX18tXCBcX19fX19cIFxfXCAgIFwgXF9fX19fXCBcX19fX19cL1xfX19fX1wKICBcL19fX18vIFwvX19fX18vXC9fLyAgICBcL19fX19fL1wvX19fX18vXC9fX19fXy8KICAgICAgIF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCiAgICAgICBXaW5kb3dzIDEwIERldmljZSBQcm92aXNpb25pbmcgVG9vbAogICAgICAgKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKio="
+        Write-Host $([system.text.encoding]::UTF8.GetString([system.convert]::FromBase64String($welcomeScreen)))
+        Start-Sleep -Seconds 2
+        $userChoice = Show-WarningShots
+    }
+    switch ($userChoice) {
+        1 {
+            $exitEarly = $true
+            throw "Stopping device provision.."
+        }
+        2 {
+            $exitEarlyUsbWipe = $true
+            throw "Wiping USB.."
+        }
+        3 {
+            $finalWarning = Show-FinalWarningShots
+            if ($finalWarning) {
+                $usbWipe = $false
+            }
+            else {
+                $exitEarly = $true
+                throw "Stopping device provision.."
+            }
+        }
+        4 {
+            $finalWarning = Show-FinalWarningShots
+            if ($finalWarning) {
+                $usbWipe = $true
+            }
+            else {
+                $exitEarly = $true
+                throw "Stopping device provision.."
+            }
+        }
+    }
     #endregion
     #region Set the install path to the location of the Install.wim file
     Write-Host "`nSetting Install.Wim location.." -ForegroundColor Yellow
@@ -310,17 +419,19 @@ try {
     Write-Host "`nSetting up Scratch & Recovery paths.." -ForegroundColor Yellow
     $usb.setScratch("W:\recycler\scratch")
     $usb.setRecovery("R:\RECOVERY\WINDOWSRE")
-    New-Item -path $usb.scratch.FullName -itemType Directory -force | Out-Null
-    New-Item -path $usb.recovery.FullName -itemType Directory -force | Out-Null
+    New-Item -Path $usb.scratch.FullName -ItemType Directory -Force | Out-Null
+    New-Item -Path $usb.recovery.FullName -ItemType Directory -Force | Out-Null
     #endregion
     #region Applying the windows image from the USB
     Write-Host "`nApplying the windows image from the USB.." -ForegroundColor Yellow
-    $imageIndex = Get-Content "$($usb.installPath)\imageIndex.json" -raw | ConvertFrom-Json -Depth 20
+    $imageIndex = Get-Content "$($usb.installPath)\imageIndex.json" -Raw | ConvertFrom-Json -Depth 20
     Invoke-Cmdline -application "DISM" -argumentList "/Apply-Image /ImageFile:$($usb.installPath)\install.wim /Index:$($imageIndex.imageIndex) /ApplyDir:$($usb.scRoot) /EA /ScratchDir:$($usb.scratch)"
     #endregion
     #region Inject the autoPilot configuration file
-    Write-Host "`nInjecting AutoPilot configuration file.." -ForegroundColor Yellow
-    Copy-Item "$PSScriptRoot\AutopilotConfigurationFile.json" -Destination "$($usb.scRoot)Windows\Provisioning\Autopilot\AutopilotConfigurationFile.json" -Force | Out-Null
+    if (Test-Path "$PSScriptRoot\AutopilotConfigurationFile.json" -ErrorAction SilentlyContinue) {
+        Write-Host "`nInjecting AutoPilot configuration file.." -ForegroundColor Yellow
+        Copy-Item "$PSScriptRoot\AutopilotConfigurationFile.json" -Destination "$($usb.scRoot)Windows\Provisioning\Autopilot\AutopilotConfigurationFile.json" -Force | Out-Null
+    }
     #endregion
     #region Setting the recovery environment
     Write-Host "`nMove WinRE to recovery partition.." -ForegroundColor Yellow
@@ -359,6 +470,12 @@ try {
         Write-Host "Nothing found. Moving on.." -ForegroundColor Yellow
     }
     #endregion
+    #region Applying drivers
+    if (Get-ChildItem "$($usb.driverPath)\*.inf" -Recurse -ErrorAction SilentlyContinue) {
+        Write-Host "`nApplying drivers.." -ForegroundColor Yellow
+        Add-Driver -driverPath $usb.driverPath -scratchDrive $usb.scRoot
+    }
+    #endregion
     $completed = $true
 }
 catch {
@@ -366,15 +483,24 @@ catch {
 }
 finally {
     $sw.stop()
+    if ($exitEarly) {
+        $errorMsg = $null
+    }
+    if ($exitEarlyUsbWipe) {
+        Format-USBDisk -targetDrive 1
+    }
     if ($errorMsg) {
         Write-Warning $errorMsg
     }
     else {
         if ($completed) {
+            if ($usbWipe) {
+                Format-USBDisk -targetDrive 1
+            }
             Write-Host "`nProvisioning process completed..`nTotal time taken: $($sw.elapsed)" -ForegroundColor Green
         }
         else {
-            Write-Host "`nProvisioning process ended abrubptly..`nTotal time taken: $($sw.elapsed)" -ForegroundColor Green
+            Write-Host "`nProvisioning process stopped prematurely..`nTotal time taken: $($sw.elapsed)" -ForegroundColor Green
         }
     }
 }
