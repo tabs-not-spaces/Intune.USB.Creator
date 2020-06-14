@@ -1,4 +1,8 @@
 {{NewVersion}}
+  - Adding in warning messages to invoke-provision script.
+  - Moved Invoke-Provision out of the WinPE media and now pulling from GitHub.
+
+{{LastVersion}}
   - Updated module dependencies to be auto-installed
   - Removed support for Out-ConsoleGridView for less required dependencies
   - Improved windows PowerShell compatibility for modules not natively supported in PowerShell 7.

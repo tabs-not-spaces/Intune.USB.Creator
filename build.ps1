@@ -20,7 +20,8 @@ if ($buildLocal) {
 try {
     #region Generate a new version number
     $newVersion = New-Object version -ArgumentList 1, 0, 1, $env:BUILD_BUILDID
-    $releaseNotes = (Get-Content .\Intune.USB.Creator\ReleaseNotes.txt -Raw).Replace("{{NewVersion}}",$newVersion)
+    $lastVersion = (Find-Module $env:ModuleName).Version
+    $releaseNotes = (Get-Content .\Intune.USB.Creator\ReleaseNotes.txt -Raw).Replace("{{NewVersion}}",$newVersion).Replace("{{LastVersion}}","$lastVersion")
     #endregion
     #region Build out the release
     $relPath = "$PSScriptRoot\bin\release\$env:BUILD_BUILDID\$moduleName"
