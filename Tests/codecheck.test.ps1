@@ -10,14 +10,14 @@ $fp = Split-Path $PSScriptRoot -Parent
 if (Test-Path $fp\localenv.ps1 -ErrorAction SilentlyContinue) {
     . $fp\localenv.ps1
 }
-$fp = "$fp\bin\release\$env:BUILD_BUILDID"
+$fp = "$fp\bin\release\$env:BUILD_BUILDID\$env:MODULENAME"
 $fp
 Describe "Checking content exists" {
     if ($filePath) {
         $scripts = Get-ChildItem $filePath
     }
     else {
-        $scripts = Get-ChildItem -Path "$fp\$env:MODULENAME" -Recurse -Include *.ps1
+        $scripts = Get-ChildItem -Path "$fp" -Recurse -Include *.ps1
         $scope = @("Private", "Public")
         foreach ($s in $scope) {
             Context "Checking for files in $s.." {
@@ -29,13 +29,13 @@ Describe "Checking content exists" {
 if (!($filePath)) {
     Describe "Manifest" {
         Context "Checking module manifest" {
-            $manifest = Test-ModuleManifest -Path "$fp\$env:MODULENAME\$env:MODULENAME`.psd1"
+            $manifest = Test-ModuleManifest -Path "$fp\$env:MODULENAME`.psd1"
             It "Has a valid module manifest" { $manifest | Should -Not -BeNullOrEmpty }
         }
     }
 }
 Describe "Checking Code Quality" {
-    $scripts = Get-ChildItem -Path "$fp\$env:MODULENAME" -Recurse -Include *.ps1
+    $scripts = Get-ChildItem -Path "$fp" -Recurse -Include *.ps1
     $scripts.ForEach{
         Context "PSSA Quality Check: $($_.name)" {
             $pssaIssues = Invoke-ScriptAnalyzer -Path "$_" -ExcludeRule $excludeRule
