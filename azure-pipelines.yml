@@ -22,7 +22,6 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                Uninstall-Module -Name Pester -Force
                 Install-Module -Name Pester -MaximumVersion 4.10.1 -Verbose -Scope CurrentUser -SkipPublisherCheck -Force
                 Install-Module WindowsAutoPilotIntune -Scope CurrentUser -Force
                 Install-Module Microsoft.Graph.Intune -Scope CurrentUser -Force
