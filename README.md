@@ -1,7 +1,8 @@
 # Intune.USB.Creator
 
 [![Build Status](https://dev.azure.com/powers-hell/Intune.USB.Creator/_apis/build/status/tabs-not-spaces.Intune.USB.Creator?branchName=master)](https://dev.azure.com/powers-hell/Intune.USB.Creator/_build/latest?definitionId=31&branchName=master)
-
+![PowerShell Gallery](https://img.shields.io/powershellgallery/v/Intune.USB.Creator.svg?style=flat&logo=powershell&label=PSGallery%20Version)
+![PSGallery Downloads](https://img.shields.io/powershellgallery/dt/Intune.USB.Creator.svg?style=flat&logo=powershell&label=PSGallery%20Downloads)
 ## Summary
 
 A module containing tools to assist with the creation of a bootable WinPE USB used to provision devices for enrollment to Intune.
@@ -57,11 +58,14 @@ Lastly, I'm providing a copy of WinPE (which also includes the "Invoke-Provision
 
 ## Release Notes
 
+* v1.0.1.285
+  - Adding in warning messages to invoke-provision script.
+  - Moved Invoke-Provision out of the WinPE media and now pulling from GitHub.
 * v1.0.1.280
   - Updated module dependencies to be auto-installed
   - Removed support for Out-ConsoleGridView for less required dependencies
   - Improved windows PowerShell compatibility for modules not natively supported in PowerShell 7.
 * v1.0.1.178
-* - UI improvements - typo fixes
+  - UI improvements - typo fixes
 * v1.0.1.177
-* - Initial release of module.
+  - Initial release of module.
