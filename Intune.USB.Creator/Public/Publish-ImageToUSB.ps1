@@ -79,7 +79,7 @@ function Publish-ImageToUSB {
         #region download and apply powershell 7 to usb
         Write-Host "`nGrabbing PWSH 7.." -ForegroundColor Yellow
         Invoke-RestMethod -Method Get -Uri 'https://aka.ms/install-powershell.ps1' -OutFile "$env:Temp\install-powershell.ps1"
-        . $env:Temp\install-powershell.ps1 -daily -Destination "$($usb.drive):\scripts\pwsh"
+        . $env:Temp\install-powershell.ps1 -Destination "$($usb.drive):\scripts\pwsh"
         #endregion download and apply powershell 7 to usb
         $completed = $true
     }
