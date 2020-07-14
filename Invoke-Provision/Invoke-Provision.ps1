@@ -429,8 +429,16 @@ try {
     #endregion
     #region Inject the autoPilot configuration file
     if (Test-Path "$PSScriptRoot\AutopilotConfigurationFile.json" -ErrorAction SilentlyContinue) {
-        Write-Host "`nInjecting AutoPilot configuration file.." -ForegroundColor Yellow
-        Copy-Item "$PSScriptRoot\AutopilotConfigurationFile.json" -Destination "$($usb.scRoot)Windows\Provisioning\Autopilot\AutopilotConfigurationFile.json" -Force | Out-Null
+        if (Test-Path "$($usb.scRoot)Windows\Provisioning\Autopilot") {
+            Write-Host "`nInjecting AutoPilot configuration file.." -ForegroundColor Yellow
+            Copy-Item "$PSScriptRoot\AutopilotConfigurationFile.json" -Destination "$($usb.scRoot)Windows\Provisioning\Autopilot\AutopilotConfigurationFile.json" -Force | Out-Null
+        }
+        else {
+            Write-Host "`nCreating new AutoPilot configuration file.." -ForegroundColor Yellow
+            New-Item -ItemType Directory -Path "$($usb.scRoot)Windows\Provisioning\Autopilot"
+            Write-Host "`nInjecting AutoPilot configuration file.." -ForegroundColor Yellow
+            Copy-Item "$PSScriptRoot\AutopilotConfigurationFile.json" -Destination "$($usb.scRoot)Windows\Provisioning\Autopilot\AutopilotConfigurationFile.json" -Force | Out-Null
+        }
     }
     #endregion
     #region Setting the recovery environment
