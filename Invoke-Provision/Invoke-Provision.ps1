@@ -440,51 +440,51 @@ try {
             Copy-Item "$PSScriptRoot\AutopilotConfigurationFile.json" -Destination "$($usb.scRoot)Windows\Provisioning\Autopilot\AutopilotConfigurationFile.json" -Force | Out-Null
         }
     }
-#endregion
-#region Setting the recovery environment
-Write-Host "`nMove WinRE to recovery partition.." -ForegroundColor Yellow
-$reWimPath = "$($usb.scRoot)Windows\System32\recovery\winre.wim"
-if (Test-Path $reWimPath -ErrorAction SilentlyContinue) {
-    Write-Host "`nMoving the recovery wim into place.." -ForegroundColor Yellow
-    (Get-ChildItem -Path $reWimPath -Force).attributes = "NotContentIndexed"
-    Move-Item -Path $reWimPath -Destination "$($usb.recovery.FullName)\winre.wim"
-    (Get-ChildItem -Path "$($usb.recovery.FullName)\winre.wim" -Force).attributes = "ReadOnly", "Hidden", "System", "Archive", "NotContentIndexed"
+    #endregion
+    #region Setting the recovery environment
+    Write-Host "`nMove WinRE to recovery partition.." -ForegroundColor Yellow
+    $reWimPath = "$($usb.scRoot)Windows\System32\recovery\winre.wim"
+    if (Test-Path $reWimPath -ErrorAction SilentlyContinue) {
+        Write-Host "`nMoving the recovery wim into place.." -ForegroundColor Yellow
+        (Get-ChildItem -Path $reWimPath -Force).attributes = "NotContentIndexed"
+        Move-Item -Path $reWimPath -Destination "$($usb.recovery.FullName)\winre.wim"
+        (Get-ChildItem -Path "$($usb.recovery.FullName)\winre.wim" -Force).attributes = "ReadOnly", "Hidden", "System", "Archive", "NotContentIndexed"
 
-    Write-Host "`nSetting the recovery environment.." -ForegroundColor Yellow
-    Invoke-Cmdline -application "$($usb.scRoot)Windows\System32\reagentc" -argumentList "/SetREImage /Path $($usb.recovery.FullName) /target $($usb.scRoot)Windows" -silent
-}
-#endregion
-#region Setting the boot environment
-Write-Host "`nSetting the boot environment.." -ForegroundColor Yellow
-Invoke-Cmdline -application "$($usb.scRoot)Windows\System32\bcdboot" -argumentList "$($usb.scRoot)Windows /s s: /f all"
-#endregion
-#region Copying over unattended.xml
-Write-Host "`nLooking for unattented.xml.." -ForegroundColor Yellow
-if (Test-Path "$($usb.winPESource)scripts\unattended.xml" -ErrorAction SilentlyContinue) {
-    Write-Host "Found it! Copying over to scratch drive.." -ForegroundColor Green
-    Copy-Item -Path "$($usb.winPESource)\scripts\unattended.xml" -Destination "$($usb.scRoot)Windows\Panther\unattended.xml" | Out-Null
-}
-else {
-    Write-Host "Nothing found. Moving on.." -ForegroundColor Red
-}
-#endregion
-#region Copying over non scanstate packages
-Write-Host "`nlooking for *.ppkg files.." -ForegroundColor Yellow
-if (Test-Path "$($usb.winPESource)scripts\*.ppkg" -ErrorAction SilentlyContinue) {
-    Write-Host "Found them! Copying over to scratch drive.." -ForegroundColor Yellow
-    Copy-Item -Path "$($usb.winPESource)\scripts\*.ppkg" -Destination "$($usb.scRoot)Windows\Panther\" | Out-Null
-}
-else {
-    Write-Host "Nothing found. Moving on.." -ForegroundColor Yellow
-}
-#endregion
-#region Applying drivers
-if (Get-ChildItem "$($usb.driverPath)\*.inf" -Recurse -ErrorAction SilentlyContinue) {
-    Write-Host "`nApplying drivers.." -ForegroundColor Yellow
-    Add-Driver -driverPath $usb.driverPath -scratchDrive $usb.scRoot
-}
-#endregion
-$completed = $true
+        Write-Host "`nSetting the recovery environment.." -ForegroundColor Yellow
+        Invoke-Cmdline -application "$($usb.scRoot)Windows\System32\reagentc" -argumentList "/SetREImage /Path $($usb.recovery.FullName) /target $($usb.scRoot)Windows" -silent
+    }
+    #endregion
+    #region Setting the boot environment
+    Write-Host "`nSetting the boot environment.." -ForegroundColor Yellow
+    Invoke-Cmdline -application "$($usb.scRoot)Windows\System32\bcdboot" -argumentList "$($usb.scRoot)Windows /s s: /f all"
+    #endregion
+    #region Copying over unattended.xml
+    Write-Host "`nLooking for unattented.xml.." -ForegroundColor Yellow
+    if (Test-Path "$($usb.winPESource)scripts\unattended.xml" -ErrorAction SilentlyContinue) {
+        Write-Host "Found it! Copying over to scratch drive.." -ForegroundColor Green
+        Copy-Item -Path "$($usb.winPESource)\scripts\unattended.xml" -Destination "$($usb.scRoot)Windows\Panther\unattended.xml" | Out-Null
+    }
+    else {
+        Write-Host "Nothing found. Moving on.." -ForegroundColor Red
+    }
+    #endregion
+    #region Copying over non scanstate packages
+    Write-Host "`nlooking for *.ppkg files.." -ForegroundColor Yellow
+    if (Test-Path "$($usb.winPESource)scripts\*.ppkg" -ErrorAction SilentlyContinue) {
+        Write-Host "Found them! Copying over to scratch drive.." -ForegroundColor Yellow
+        Copy-Item -Path "$($usb.winPESource)\scripts\*.ppkg" -Destination "$($usb.scRoot)Windows\Panther\" | Out-Null
+    }
+    else {
+        Write-Host "Nothing found. Moving on.." -ForegroundColor Yellow
+    }
+    #endregion
+    #region Applying drivers
+    if (Get-ChildItem "$($usb.driverPath)\*.inf" -Recurse -ErrorAction SilentlyContinue) {
+        Write-Host "`nApplying drivers.." -ForegroundColor Yellow
+        Add-Driver -driverPath $usb.driverPath -scratchDrive $usb.scRoot
+    }
+    #endregion
+    $completed = $true
 }
 catch {
     $errorMsg = $_.Exception.Message
