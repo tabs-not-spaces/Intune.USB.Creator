@@ -24,6 +24,8 @@ $params = @{
     winPEPath = "https://githublfs.blob.core.windows.net/storage/WinPE.zip"
     windowsIsoPath = "C:\path\to\win10.iso"
     getAutopilotCfg = $true
+    imageIndex = 5 # Optional parameter
+    diskNum = 1 # Optional parameter
 }
 Publish-ImageToUSB @params
 ```

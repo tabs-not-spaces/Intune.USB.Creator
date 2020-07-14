@@ -1,15 +1,35 @@
 function Publish-ImageToUSB {
     [cmdletbinding()]
     param (
-        [parameter(Mandatory = $true)]
+        [parameter(ParameterSetName = "Build", Mandatory = $true)]
+        [parameter(ParameterSetName = "Default", Mandatory = $true)]
         [string]$winPEPath,
 
-        [parameter(Mandatory = $true)]
+        [parameter(ParameterSetName = "Build", Mandatory = $true)]
+        [parameter(ParameterSetName = "Default", Mandatory = $true)]
         [string]$windowsIsoPath,
 
-        [parameter(Mandatory = $false)]
-        [switch]$getAutoPilotCfg
+        [parameter(ParameterSetName = "Build", Mandatory = $false)]
+        [parameter(ParameterSetName = "Default", Mandatory = $false)]
+        [switch]$getAutoPilotCfg,
+
+        [parameter(ParameterSetName = "Build", Mandatory = $true)]
+        [string]$imageIndex,
+
+        [parameter(ParameterSetName = "Build", Mandatory = $true)] 
+        [string]$diskNum
     )
+    $info = @{"WindowsPEPath" = $winPEPath; "WindowsISOPath" = $windowsIsoPath; "AutoPilotConfiguration" = $getAutoPilotCfg; ;}
+
+    switch ($PsCmdlet.ParameterSetName) 
+    {
+        Build { 
+            $info.ImageIndex = $imageIndex
+            $info.DiskNumber = $diskNum
+         }
+        Default {}
+    }
+
     #region Main Process
     try {
         #region start diagnostic // show welcome
@@ -30,20 +50,29 @@ function Publish-ImageToUSB {
         Get-RemoteFile -fileUri $winPEPath -destination $usb.downloadPath -expand
         #endregion
         #region get wim from ISO
-        if ($windowsIsoPath) {
-            Write-Host "`nGetting install.wim from windows media.." -ForegroundColor Yellow -NoNewline
-            if (Test-Path -Path $windowsIsoPath -ErrorAction SilentlyContinue) {
-                $dlFile = $windowsIsoPath
-            }
-            else {
-                $dlFile = Get-RemoteFile -fileUri $windowsIsoPath -destination $usb.downloadPath
-            }
-            Get-WimFromIso -isoPath $dlFile -wimDestination $usb.WIMPath
+        Write-Host "`nGetting install.wim from windows media.." -ForegroundColor Yellow -NoNewline
+        if (Test-Path -Path $windowsIsoPath -ErrorAction SilentlyContinue) {
+            $dlFile = $windowsIsoPath
         }
+        else {
+            $dlFile = Get-RemoteFile -fileUri $windowsIsoPath -destination $usb.downloadPath
+        }
+        Get-WimFromIso -isoPath $dlFile -wimDestination $usb.WIMPath
         #endregion
         #region get image index from wim
         Write-Host "`nGetting image index from install.wim.." -ForegroundColor Yellow
-        Get-ImageIndexFromWim -wimPath $usb.WIMFilePath -destination "$($usb.downloadPath)\$($usb.dirName2)"
+        Write-Host $imageIndex
+        if ($PsCmdlet.ParameterSetName -ne "Build") {
+            Get-ImageIndexFromWim -wimPath $usb.WIMFilePath -destination "$($usb.downloadPath)\$($usb.dirName2)"
+        }
+        else {
+            $wimPath = $usb.WIMFilePath
+            Write-Verbose "Getting windows images from $wimPath"
+            $images = Get-WindowsImage -ImagePath $wimPath
+            Write-Host "Image $rh / $(($images | Where-Object {$_.ImageIndex -eq $rh}).ImageName) selected.." -ForegroundColor Gray
+            $images | Where-Object { $_.ImageIndex -eq $rh } | ConvertTo-Json -Depth 20 | Out-File "$destination\imageIndex.json" -Encoding ascii -Force
+            Write-Host "ImageIndex.Json saved to $destination.."
+        }
         #endregion
         #region get Autopilot config from azure
         if ($getAutopilotCfg) {
@@ -53,8 +82,17 @@ function Publish-ImageToUSB {
         #endregion
         #region choose and partition USB
         Write-Host "`nConfiguring USB.." -ForegroundColor Yellow
-        $chooseDisk = Get-DiskToUse
-        $usb = Set-USBPartition -usbClass $usb -diskNum $chooseDisk
+        if ($PsCmdlet.ParameterSetName -ne "Build") {
+            $chooseDisk = Get-DiskToUse
+            $usb = Set-USBPartition -usbClass $usb -diskNum $chooseDisk
+        }
+        else {
+            $table = Get-Disk | Where-Object { $_.Bustype -notin @('SATA', 'NVMe') } | Select-Object Number, @{Name = 'TotalSize(GB)'; Expression = { ($_.Size / 1GB).ToString("#.##") } }, @{Name = "Name"; Expression = { $_.FriendlyName } } | Sort-Object -Property Number | Format-Table | Out-Host
+            Write-Host $table
+            Write-Host "`nDisk number " $diskNum " selected." -ForegroundColor Cyan
+            $usb = Set-USBPartition -usbClass $usb -diskNum $diskNum
+        }
+  
         #endregion
         #region write WinPE to USB
         Write-Host "`nWriting WinPE to USB.." -ForegroundColor Yellow -NoNewline
