@@ -4,7 +4,7 @@ trigger:
       - master
   paths:
     include:
-      - /Intune.USB.Creator
+      - /Intune.USB.Creator/ReleaseNotes.txt
     exclude:
       - /.gitignore
       - /readme.md
