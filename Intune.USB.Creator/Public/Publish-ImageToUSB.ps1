@@ -8,6 +8,9 @@ function Publish-ImageToUSB {
         [string]$windowsIsoPath,
 
         [parameter(Mandatory = $false)]
+        [int32]$imageIndex,
+
+        [parameter(Mandatory = $false)]
         [switch]$getAutoPilotCfg
     )
     #region Main Process
@@ -42,8 +45,15 @@ function Publish-ImageToUSB {
         }
         #endregion
         #region get image index from wim
-        Write-Host "`nGetting image index from install.wim.." -ForegroundColor Yellow
-        Get-ImageIndexFromWim -wimPath $usb.WIMFilePath -destination "$($usb.downloadPath)\$($usb.dirName2)"
+        if ($imageIndex) {
+            @{
+                "ImageIndex" = $imageIndex
+            } | ConvertTo-Json | Out-File "$($usb.downloadPath)\$($usb.dirName2)\imageIndex.json"
+        }
+        else {
+            Write-Host "`nGetting image index from install.wim.." -ForegroundColor Yellow
+            Get-ImageIndexFromWim -wimPath $usb.WIMFilePath -destination "$($usb.downloadPath)\$($usb.dirName2)"
+        }
         #endregion
         #region get Autopilot config from azure
         if ($getAutopilotCfg) {
