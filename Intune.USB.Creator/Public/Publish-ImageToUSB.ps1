@@ -61,7 +61,6 @@ function Publish-ImageToUSB {
         #endregion
         #region get image index from wim
         Write-Host "`nGetting image index from install.wim.." -ForegroundColor Yellow
-        Write-Host $imageIndex
         if ($PsCmdlet.ParameterSetName -ne "Build") {
             Get-ImageIndexFromWim -wimPath $usb.WIMFilePath -destination "$($usb.downloadPath)\$($usb.dirName2)"
         }
@@ -69,8 +68,8 @@ function Publish-ImageToUSB {
             $wimPath = $usb.WIMFilePath
             Write-Verbose "Getting windows images from $wimPath"
             $images = Get-WindowsImage -ImagePath $wimPath
-            Write-Host "Image $rh / $(($images | Where-Object {$_.ImageIndex -eq $rh}).ImageName) selected.." -ForegroundColor Gray
-            $images | Where-Object { $_.ImageIndex -eq $rh } | ConvertTo-Json -Depth 20 | Out-File "$destination\imageIndex.json" -Encoding ascii -Force
+            Write-Host "Image $imageIndex / $(($images | Where-Object {$_.ImageIndex -eq $imageIndex}).ImageName) selected.." -ForegroundColor Gray
+            $images | Where-Object { $_.ImageIndex -eq $imageIndex } | ConvertTo-Json -Depth 20 | Out-File "$destination\imageIndex.json" -Encoding ascii -Force
             Write-Host "ImageIndex.Json saved to $destination.."
         }
         #endregion
