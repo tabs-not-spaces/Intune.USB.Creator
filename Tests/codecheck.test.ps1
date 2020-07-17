@@ -4,7 +4,8 @@ param (
 )
 $excludeRule = @(
     "PSAvoidUsingWriteHost",
-    "PSAvoidUsingConvertToSecureStringWithPlainText"
+    "PSAvoidUsingConvertToSecureStringWithPlainText",
+    "PSAvoidUsingPositionalParameters"
 )
 $fp = Split-Path $PSScriptRoot -Parent
 if (Test-Path $fp\localenv.ps1 -ErrorAction SilentlyContinue) {
