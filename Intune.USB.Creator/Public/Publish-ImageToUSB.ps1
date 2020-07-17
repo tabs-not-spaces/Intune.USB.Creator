@@ -19,17 +19,6 @@ function Publish-ImageToUSB {
         [parameter(ParameterSetName = "Build", Mandatory = $true)]
         [string]$diskNum
     )
-    $info = @{"WindowsPEPath" = $winPEPath; "WindowsISOPath" = $windowsIsoPath; "AutoPilotConfiguration" = $getAutoPilotCfg; ;}
-
-    switch ($PsCmdlet.ParameterSetName)
-    {
-        Build {
-            $info.ImageIndex = $imageIndex
-            $info.DiskNumber = $diskNum
-         }
-        Default {}
-    }
-
     #region Main Process
     try {
         #region start diagnostic // show welcome
