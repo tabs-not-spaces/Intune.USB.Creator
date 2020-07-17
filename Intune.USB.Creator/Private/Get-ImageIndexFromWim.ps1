@@ -18,7 +18,7 @@ function Get-ImageIndexFromWim {
         }
         Write-Host "Image $rh / $(($images | Where-Object {$_.ImageIndex -eq $rh}).ImageName) selected.." -ForegroundColor Gray
         $images | Where-Object { $_.ImageIndex -eq $rh } | ConvertTo-Json -Depth 20 | Out-File "$destination\imageIndex.json" -Encoding ascii -Force
-        Write-Verbose "ImageIndex.Json saved to $destination.."
+        Write-Host "ImageIndex.Json saved to $destination.."
     }
     catch {
         Write-Warning $_.Exception.Message

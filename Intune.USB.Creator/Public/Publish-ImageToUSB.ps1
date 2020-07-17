@@ -1,14 +1,23 @@
 function Publish-ImageToUSB {
     [cmdletbinding()]
     param (
-        [parameter(Mandatory = $true)]
+        [parameter(ParameterSetName = "Build", Mandatory = $true)]
+        [parameter(ParameterSetName = "Default", Mandatory = $true)]
         [string]$winPEPath,
 
-        [parameter(Mandatory = $true)]
+        [parameter(ParameterSetName = "Build", Mandatory = $true)]
+        [parameter(ParameterSetName = "Default", Mandatory = $true)]
         [string]$windowsIsoPath,
 
-        [parameter(Mandatory = $false)]
-        [switch]$getAutoPilotCfg
+        [parameter(ParameterSetName = "Build", Mandatory = $false)]
+        [parameter(ParameterSetName = "Default", Mandatory = $false)]
+        [switch]$getAutoPilotCfg,
+
+        [parameter(ParameterSetName = "Build", Mandatory = $true)]
+        [string]$imageIndex,
+
+        [parameter(ParameterSetName = "Build", Mandatory = $true)]
+        [string]$diskNum
     )
     #region Main Process
     try {
@@ -30,20 +39,25 @@ function Publish-ImageToUSB {
         Get-RemoteFile -fileUri $winPEPath -destination $usb.downloadPath -expand
         #endregion
         #region get wim from ISO
-        if ($windowsIsoPath) {
-            Write-Host "`nGetting install.wim from windows media.." -ForegroundColor Yellow -NoNewline
-            if (Test-Path -Path $windowsIsoPath -ErrorAction SilentlyContinue) {
-                $dlFile = $windowsIsoPath
-            }
-            else {
-                $dlFile = Get-RemoteFile -fileUri $windowsIsoPath -destination $usb.downloadPath
-            }
-            Get-WimFromIso -isoPath $dlFile -wimDestination $usb.WIMPath
+        Write-Host "`nGetting install.wim from windows media.." -ForegroundColor Yellow -NoNewline
+        if (Test-Path -Path $windowsIsoPath -ErrorAction SilentlyContinue) {
+            $dlFile = $windowsIsoPath
         }
+        else {
+            $dlFile = Get-RemoteFile -fileUri $windowsIsoPath -destination $usb.downloadPath
+        }
+        Get-WimFromIso -isoPath $dlFile -wimDestination $usb.WIMPath
         #endregion
         #region get image index from wim
-        Write-Host "`nGetting image index from install.wim.." -ForegroundColor Yellow
-        Get-ImageIndexFromWim -wimPath $usb.WIMFilePath -destination "$($usb.downloadPath)\$($usb.dirName2)"
+        if ($imageIndex) {
+            @{
+                "ImageIndex" = $imageIndex
+            } | ConvertTo-Json | Out-File "$($usb.downloadPath)\$($usb.dirName2)\imageIndex.json"
+        }
+        else {
+            Write-Host "`nGetting image index from install.wim.." -ForegroundColor Yellow
+            Get-ImageIndexFromWim -wimPath $usb.WIMFilePath -destination "$($usb.downloadPath)\$($usb.dirName2)"
+        }
         #endregion
         #region get Autopilot config from azure
         if ($getAutopilotCfg) {
@@ -53,7 +67,13 @@ function Publish-ImageToUSB {
         #endregion
         #region choose and partition USB
         Write-Host "`nConfiguring USB.." -ForegroundColor Yellow
-        $chooseDisk = Get-DiskToUse
+        if ($PsCmdlet.ParameterSetName -eq "Build") {
+            $chooseDisk = Get-DiskToUse -diskNum $diskNum
+        }
+        else {
+            $chooseDisk = Get-DiskToUse
+        }
+        Write-Host "`nDisk number " $diskNum " selected." -ForegroundColor Cyan
         $usb = Set-USBPartition -usbClass $usb -diskNum $chooseDisk
         #endregion
         #region write WinPE to USB
