@@ -60,6 +60,14 @@ Lastly, I'm providing a copy of WinPE (which also includes the "Invoke-Provision
 
 ## Release Notes
 
+* V1.0.1.311
+  - ImageIndex & DiskNum variables added to allow non-interactive use of module. (Thanks axgch)
+  
+* v1.0.1.309
+  - USB size check implemented - no smaller than 8gb. (Thanks Rob)
+  - Autopilot provisioning path now tested (Thanks Rob)
+  - Removed daily flag from pwsh7 installer ( Thanks jmaystahl)
+
 * v1.0.1.285
   - Adding in warning messages to invoke-provision script.
   - Moved Invoke-Provision out of the WinPE media and now pulling from GitHub.
