@@ -60,7 +60,7 @@ function Get-AutopilotPolicy {
                 Remove-Module $_ -ErrorAction SilentlyContinue 3>$null
             }
         }
-        if ($errrorMsg) {
+        if ($errorMsg) {
             Write-Warning $errorMsg
         }
     }
