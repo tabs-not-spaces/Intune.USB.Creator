@@ -34,14 +34,15 @@ function Get-AutopilotPolicy {
                 if ($apPolicies.count -gt 1) {
                     Write-Host "Multiple Autopilot policies found - select the correct one.." -ForegroundColor Cyan
                     $selectedPolicy = $apPolicies | Select-Object displayName | Out-GridView -passthru
-                    $apPol = $apPolicies | Where-Object {$_.displayName -eq $selectedPolicy}
+                    $apPol = $apPolicies | Where-Object {$_.displayName -eq $selectedPolicy.displayName}
                 }
                 else {
                     Write-Host "Policy found - saving to $FileDestination.." -ForegroundColor Cyan
                     $apPol = $apPolicies
                 }
                 $apPol | ConvertTo-AutopilotConfigurationJSON | Out-File "$FileDestination\AutopilotConfigurationFile.json" -Encoding ascii -Force
-                Write-Host "Autopilot profile selected: $($apPol.displayName)" -ForegroundColor Green
+                Write-Host "Autopilot profile selected: " -ForegroundColor Cyan -NoNewline
+                Write-Host "$($apPol.displayName)" -ForegroundColor Green
             }
             #endregion Get policies
         }
