@@ -18,11 +18,37 @@ stages:
           vmImage: 'vs2017-win2016'
         steps:
           - task: PowerShell@2
+            displayName: Pre-Build
+            inputs:
+              targetType: 'inline'
+              script: |
+                Install-Module -Name Pester -MaximumVersion 4.10.1 -Verbose -Scope CurrentUser -SkipPublisherCheck -Force
+                Install-Module WindowsAutoPilotIntune -Scope CurrentUser -Force
+                Install-Module Microsoft.Graph.Intune -Scope CurrentUser -Force
+                Install-Module TestJsonSchema -Scope CurrentUser -SkipPublisherCheck -ErrorAction SilentlyContinue -Force
+                Install-Module PSScriptAnalyzer -Scope CurrentUser -SkipPublisherCheck -ErrorAction SilentlyContinue -Force
+              pwsh: true
+
+          - task: PowerShell@2
             displayName: Build
             inputs:
               filePath: './build.ps1'
               arguments: '-modulePath $(modulePath)'
               pwsh: true
+
+          - task: PowerShell@2
+            displayName: 'Code Quality Test'
+            inputs:
+              filePath: './tests/codecheck.ps1'
+              pwsh: true
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results'
+            inputs:
+              testResultsFormat: 'NUnit'
+              testResultsFiles: 'pester.codecheck.test.xml'
+              searchFolder: '$(System.DefaultWorkingDirectory)/.tests'
+              failTaskOnFailedTests: true
+              testRunTitle: 'Code Quality Test'
 
           - task: CopyFiles@2
             inputs:
