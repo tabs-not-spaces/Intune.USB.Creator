@@ -80,6 +80,14 @@ stages:
                     targetType: 'inline'
                     script: |
                       try {
+                        $modules = @(
+                          "WindowsAutoPilotIntune"
+                          "Microsoft.Graph.Intune"
+                        )
+                        foreach ($m in $modules) {
+                          write-host "Installing module: $m.."
+                          Install-Module $m -Scope CurrentUser -Force
+                        }
                         write-host "Publishing module from: $env:Pipeline_Workspace\release\$env:MODULENAME"
                         Publish-Module -Path "$env:Pipeline_Workspace\release\$env:MODULENAME" -NuGetApiKey $env:APIKEY
                       }
