@@ -1,66 +1,66 @@
-[cmdletbinding()]
+﻿[cmdletbinding()]
 param (
     [parameter(Mandatory = $true)]
     [System.IO.FileInfo]$modulePath,
 
-    [parameter(Mandatory = $true)]
-    [string]$moduleName,
-
     [parameter(Mandatory = $false)]
     [switch]$buildLocal
 )
-if ($buildLocal) {
-    if (Test-Path $PSScriptRoot\localenv.ps1 -ErrorAction SilentlyContinue) {
-        . $PSScriptRoot\localenv.ps1
-        if (Test-Path "$PSScriptRoot\bin\release\*") {
-            $env:BUILD_BUILDID = ((Get-ChildItem $PSScriptRoot\bin\release\).Name | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) + 1
-        }
-    }
-}
+
 try {
     #region Generate a new version number
-    $newVersion = New-Object version -ArgumentList 1, 0, 1, $env:BUILD_BUILDID
-    $lastVersion = (Find-Module $env:ModuleName).Version
-    $releaseNotes = (Get-Content .\Intune.USB.Creator\ReleaseNotes.txt -Raw).Replace("{{NewVersion}}",$newVersion).Replace("{{LastVersion}}","$lastVersion")
+    $moduleName = Split-Path -Path $modulePath -Leaf
+    $PreviousVersion = Find-Module -Name $moduleName -ErrorAction SilentlyContinue | Select-Object *
+    [Version]$exVer = $PreviousVersion ? $PreviousVersion.Version : $null
+    if ($buildLocal) {
+        $rev = ((Get-ChildItem -Path "$PSScriptRoot\bin\release\" -ErrorAction SilentlyContinue).Name | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) + 1
+        $newVersion = New-Object -TypeName Version -ArgumentList 1, 0, 0, $rev
+    }
+    else {
+        $newVersion = if ($exVer) {
+            $rev = ($exVer.Revision + 1)
+            New-Object version -ArgumentList $exVer.Major, $exVer.Minor, $exVer.Build, $rev
+        }
+        else {
+            $rev = ((Get-ChildItem "$PSScriptRoot\bin\release\" -ErrorAction SilentlyContinue).Name | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) + 1
+            New-Object Version -ArgumentList 1, 0, 0, $rev
+        }
+    }
+    $releaseNotes = (Get-Content ".\$moduleName\ReleaseNotes.txt" -Raw -ErrorAction SilentlyContinue).Replace("{{NewVersion}}", $newVersion)
+    if ($PreviousVersion) {
+        $releaseNotes = @"
+$releaseNotes
+
+$($previousVersion.releaseNotes)
+"@
+    }
     #endregion
+
     #region Build out the release
-    $relPath = "$PSScriptRoot\bin\release\$env:BUILD_BUILDID\$moduleName"
+    if ($buildLocal) {
+        $relPath = "$PSScriptRoot\bin\release\$rev\$moduleName"
+    }
+    else {
+        $relPath = "$PSScriptRoot\bin\release\$moduleName"
+    }
     "Version is $newVersion"
     "Module Path is $modulePath"
     "Module Name is $moduleName"
     "Release Path is $relPath"
-    if (!(Test-Path $relPath)) {
+    if (!(Test-Path -Path $relPath)) {
         New-Item -Path $relPath -ItemType Directory -Force | Out-Null
     }
-    Copy-Item "$modulePath\*" -Destination "$relPath" -Recurse -Exclude ".gitKeep"
-    #endregion
-    #region Generate a list of public functions and update the module manifest
-    $functions = @(Get-ChildItem -Path $relPath\Public\*.ps1 -ErrorAction SilentlyContinue).basename
-    $params = @{
-        Path = "$relPath\$ModuleName.psd1"
-        ModuleVersion = $newVersion
-        Description = (Get-Content $relPath\description.txt -raw).ToString()
-        FunctionsToExport = $functions
-        ReleaseNotes = $releaseNotes.ToString()
+
+    Copy-Item -Path "$modulePath\*" -Destination "$relPath" -Recurse -Exclude ".gitKeep", "releaseNotes.txt", "description.txt"
+
+    $Manifest = @{
+        Path              = "$relPath\$moduleName.psd1"
+        ModuleVersion     = $newVersion
+        Description       = (Get-Content "$modulePath\description.txt" -Raw).ToString()
+        FunctionsToExport = (Get-ChildItem -Path "$relPath\Public\*.ps1" -Recurse).BaseName
+        ReleaseNotes      = $releaseNotes
     }
-    Update-ModuleManifest @params
-    $moduleManifest = Get-Content $relPath\$ModuleName.psd1 -raw | Invoke-Expression
-    #endregion
-    #region Generate the nuspec manifest
-    $t = [xml](Get-Content $PSScriptRoot\module.nuspec -Raw)
-    $t.package.metadata.id = $moduleName
-    $t.package.metadata.version = $newVersion.ToString()
-    $t.package.metadata.authors = $moduleManifest.author.ToString()
-    $t.package.metadata.owners = $moduleManifest.author.ToString()
-    $t.package.metadata.requireLicenseAcceptance = "false"
-    $t.package.metadata.description = (Get-Content $relPath\description.txt -raw).ToString()
-    $t.package.metadata.description
-    $t.package.metadata.releaseNotes = $releaseNotes.ToString()
-    $t.package.metadata.releaseNotes
-    $t.package.metadata.copyright = $moduleManifest.copyright.ToString()
-    $t.package.metadata.tags = ($moduleManifest.PrivateData.PSData.Tags -join ',').ToString()
-    $t.Save("$PSScriptRoot\$moduleName`.nuspec")
-    #endregion
+    Update-ModuleManifest @Manifest
 }
 catch {
     $_

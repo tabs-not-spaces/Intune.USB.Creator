@@ -33,7 +33,7 @@ stages:
             displayName: Build
             inputs:
               filePath: './build.ps1'
-              arguments: '-modulePath $(modulePath) -moduleName $(moduleName)'
+              arguments: '-modulePath $(modulePath)'
               pwsh: true
 
           - task: PowerShell@2
@@ -41,7 +41,6 @@ stages:
             inputs:
               filePath: './tests/codecheck.ps1'
               pwsh: true
-
           - task: PublishTestResults@2
             displayName: 'Publish Test Results'
             inputs:
@@ -53,7 +52,7 @@ stages:
 
           - task: CopyFiles@2
             inputs:
-              SourceFolder: './bin/release/$(Build.BuildId)'
+              SourceFolder: './bin/release'
               Contents: '**'
               TargetFolder: '$(Build.ArtifactStagingDirectory)'
               CleanTargetFolder: true
@@ -81,14 +80,6 @@ stages:
                     targetType: 'inline'
                     script: |
                       try {
-                        $modules = @(
-                          "WindowsAutoPilotIntune"
-                          "Microsoft.Graph.Intune"
-                        )
-                        foreach ($m in $modules) {
-                          write-host "Installing module: $m.."
-                          Install-Module $m -Scope CurrentUser -Force
-                        }
                         write-host "Publishing module from: $env:Pipeline_Workspace\release\$env:MODULENAME"
                         Publish-Module -Path "$env:Pipeline_Workspace\release\$env:MODULENAME" -NuGetApiKey $env:APIKEY
                       }

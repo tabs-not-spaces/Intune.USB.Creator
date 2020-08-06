@@ -32,7 +32,7 @@ function Get-RemoteFile {
         }
     }
     if ($expand) {
-        $expandPath = Join-Path $destination -ChildPath $($fn.Split(".zip")[0])
+        $expandPath = Join-Path $destination -ChildPath $($fn -Split ".zip")[0]
         Write-Host "Checking if file already unzipped.." -ForegroundColor Cyan -NoNewline
         if (!(Test-Path -Path $expandPath)) {
             Write-Host " X" -ForegroundColor Red
