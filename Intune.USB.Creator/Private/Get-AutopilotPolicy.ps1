@@ -33,7 +33,8 @@ function Get-AutopilotPolicy {
             else {
                 if ($apPolicies.count -gt 1) {
                     Write-Host "Multiple Autopilot policies found - select the correct one.." -ForegroundColor Cyan
-                    $apPol = $apPolicies | Select-Object displayName | Out-GridView -passthru
+                    $selectedPolicy = $apPolicies | Select-Object displayName | Out-GridView -passthru
+                    $apPol = $apPolicies | Where-Object {$_.displayName -eq $selectedPolicy}
                 }
                 else {
                     Write-Host "Policy found - saving to $FileDestination.." -ForegroundColor Cyan
@@ -60,7 +61,7 @@ function Get-AutopilotPolicy {
                 Remove-Module $_ -ErrorAction SilentlyContinue 3>$null
             }
         }
-        if ($errrorMsg) {
+        if ($errorMsg) {
             Write-Warning $errorMsg
         }
     }
