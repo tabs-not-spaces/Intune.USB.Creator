@@ -323,7 +323,6 @@ function Show-WarningShots {
     Write-Host "1: Exit" -ForegroundColor Green
     Write-Host "2: Wipe USB" -ForegroundColor Green
     Write-Host "3: Install Windows 10 and KEEP USB " -ForegroundColor Green -NoNewline
-    Write-Host "## !!! Destructive !!! ##" -ForegroundColor Red
     Write-Host "4: Install Windows 10 and DELETE USB " -ForegroundColor Green -NoNewline
     Write-Host "## !!! Destructive !!! ##" -ForegroundColor Red
 
