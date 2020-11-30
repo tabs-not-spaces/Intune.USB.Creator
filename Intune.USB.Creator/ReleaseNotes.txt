@@ -1,3 +1,2 @@
 {{NewVersion}}
-  - Fixes issues with WinPE extraction. (Thanks to Peter C. for troubleshooting this one)
-  - Fixes issues with multiple autopilot policies not downloading properly.
+  - Forcing version of PowerShell to 7.0.3 to fix reported problems with WinPE & PowerShell 7.1
