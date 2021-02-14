@@ -20,7 +20,7 @@ class USBImage {
         $this.installPath = "$($this.installRoot)images"
         $this.cuPath = "$($this.installPath)\CU"
         $this.ssuPath = "$($this.installPath)\SSU"
-        $this.driverPath = "$(Split-Path $PSScriptRoot -Parent)\Drivers"
+        $this.driverPath = "$($this.installRoot)Drivers"
     }
     setScratch ([System.IO.DirectoryInfo]$scratch) {
         $this.scratch = $scratch
@@ -359,7 +359,24 @@ function Show-FinalWarningShots {
 #region Main process
 try {
     $errorMsg = $null
+    $usb = [USBImage]::new($env:SystemDrive)
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    #region Bootstrap drivers
+    $deviceModel = Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Model
+    Write-Host "`nDevice Model: " -ForegroundColor Yellow -NoNewline
+    $drivers = Get-ChildItem $usb.driverPath -Filter *.inf -Recurse
+    if ($drivers) {
+        Write-Host $deviceModel -ForegroundColor Cyan
+        Write-Host "Bootstrapping found drivers into WinPE Environment.." -ForegroundColor Yellow
+        foreach ($d in $drivers) {
+            . drvload $d.fullName
+        }
+    }
+    else {
+        Write-Host "No drivers detected.." -ForegroundColor Yellow
+    }
+
+    #endregion
     #region Set power policy to High Performance
     Set-PowerPolicy -powerPlan HighPerformance
     #endregion
@@ -406,7 +423,6 @@ try {
     #region Set the install path to the location of the Install.wim file
     Write-Host "`nSetting Install.Wim location.." -ForegroundColor Yellow
     #$installPath = Find-InstallWim -volumeInfo (Get-DiskPartVolume -winPEDrive "X:")
-    $usb = [USBImage]::new($env:SystemDrive)
     if (!($usb.installRoot)) {
         throw "Coudn't find install.wim anywhere..."
     }

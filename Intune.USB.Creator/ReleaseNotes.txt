@@ -1,2 +1,2 @@
 {{NewVersion}}
-  - Forcing version of PowerShell to 7.0.3 to fix reported problems with WinPE & PowerShell 7.1
+  - Updated Invoke-Provision to allow driver bootstrapping. Should allow all devices to work seamlessly with the tool. 🍻🍻🍻
