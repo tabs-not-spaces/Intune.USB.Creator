@@ -19,7 +19,7 @@ function Set-USBPartition {
         }
         Start-Sleep -Seconds 3
         Write-Host "Creating New Partions" -ForegroundColor Cyan
-        $usbClass.drive = (New-Partition -DiskNumber $diskNum -Size 2GB -AssignDriveLetter | Format-Volume -FileSystem FAT32 -NewFileSystemLabel WINPE -Confirm:$false -Force).DriveLetter
+        $usbClass.drive = (New-Partition -DiskNumber $diskNum -Size 3GB -AssignDriveLetter | Format-Volume -FileSystem FAT32 -NewFileSystemLabel WINPE -Confirm:$false -Force).DriveLetter
         $usbClass.drive2 = (New-Partition -DiskNumber $diskNum -UseMaximumSize -AssignDriveLetter | Format-Volume -FileSystem NTFS -NewFileSystemLabel Images -Confirm:$false -Force).DriveLetter
         $usbClass
     }
