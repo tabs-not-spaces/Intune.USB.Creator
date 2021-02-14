@@ -92,6 +92,10 @@ function Publish-ImageToUSB {
             Write-ToUSB -Path "$($usb.downloadPath)\AutopilotConfigurationFile.json" -Destination "$($usb.drive):\scripts\"
         }
         #endregion
+        #region Create drivers folder
+        Write-Host "`nSetting up folder structures for Drivers.." -ForegroundColor Yellow -NoNewline
+        New-Item -Path "$($usb.drive2):\Drivers" -ItemType Directory -Force | Out-Null
+        #endregion
         #region download provision script and install to usb
         Write-Host "`nGrabbing provision script from GitHub.." -ForegroundColor Yellow
         Invoke-RestMethod -Method Get -Uri $script:provisionUrl -OutFile "$($usb.drive):\scripts\Invoke-Provision.ps1"
