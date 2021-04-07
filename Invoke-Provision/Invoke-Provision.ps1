@@ -478,6 +478,9 @@ try {
     Write-Host "`nLooking for unattented.xml.." -ForegroundColor Yellow
     if (Test-Path "$($usb.winPESource)scripts\unattended.xml" -ErrorAction SilentlyContinue) {
         Write-Host "Found it! Copying over to scratch drive.." -ForegroundColor Green
+        if(-not (Test-Path "$($usb.scRoot)Windows\Panther" -ErrorAction SilentlyContinue)){\
+            New-Item -Path "$($usb.scRoot)Windows\Panther" -ItemType Directory -Force | Out-Null
+         }
         Copy-Item -Path "$($usb.winPESource)\scripts\unattended.xml" -Destination "$($usb.scRoot)Windows\Panther\unattended.xml" | Out-Null
     }
     else {
