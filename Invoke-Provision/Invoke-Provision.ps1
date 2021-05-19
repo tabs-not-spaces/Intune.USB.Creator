@@ -144,7 +144,42 @@ exit
     catch {
         throw $_
     }
-
+}
+function Get-USBDeviceId {
+    try {
+        $USBDrives = $drives | ?{ $_.BusType -eq "USB"}
+        if (@($USBDrives).count -eq 1) {
+            $USBDrive = $USBDrives[0].DeviceId
+            return $USBDrive
+       }
+       else {
+            throw "Error while getting DeviceId of USB Stick. No additional USB storage devices must be attached"
+       }
+    }
+    catch {
+        throw $_
+    }
+}
+function Get-SystemDeviceId {
+    try {
+       $dataDrives = $drives | ?{ $_.BusType -ne "USB"}
+       if (@($DataDrives).count -eq 1) {
+            $targetDrive = $DataDrives[0].DeviceId
+            return $targetDrive
+       }
+       elseif (@($DataDrives).count -gt 1) {
+            Write-Host "More than one disk has been detected. Select disk where Windows should be installed" -ForegroundColor Yellow
+            $DataDrives | ft DeviceId, FriendlyName, Size| Out-String | % {Write-Host $_ -ForegroundColor Cyan}
+            $targetDrive = Read-Host "Please make a selection..."
+            return $targetDrive
+        }
+       else {
+           throw "Error while getting DeviceId of potiential Windows target drives" 
+       }
+    }
+    catch {
+        throw $_
+    }
 }
 function Set-DrivePartition {
     [cmdletbinding()]
@@ -429,7 +464,9 @@ try {
     #endregion
     #region Configure drive partitions
     Write-Host "`nConfiguring drive partitions.." -ForegroundColor Yellow
-    Set-DrivePartition -winPEDrive $usb.winPEDrive -targetDrive 0
+    $drives = @(Get-PhysicalDisk)
+    $targetDrive = Get-SystemDeviceId
+    Set-DrivePartition -winPEDrive $usb.winPEDrive -targetDrive $targetDrive
     #endregion
     #region Set paths
     Write-Host "`nSetting up Scratch & Recovery paths.." -ForegroundColor Yellow
@@ -510,11 +547,12 @@ catch {
 }
 finally {
     $sw.stop()
+    $USBDrive = Get-USBDeviceId
     if ($exitEarly) {
         $errorMsg = $null
     }
     if ($exitEarlyUsbWipe) {
-        Format-USBDisk -targetDrive 1
+        Format-USBDisk -targetDrive $USBDrive
     }
     if ($errorMsg) {
         Write-Warning $errorMsg
@@ -522,7 +560,7 @@ finally {
     else {
         if ($completed) {
             if ($usbWipe) {
-                Format-USBDisk -targetDrive 1
+                Format-USBDisk -targetDrive $USBDrive
             }
             Write-Host "`nProvisioning process completed..`nTotal time taken: $($sw.elapsed)" -ForegroundColor Green
         }
