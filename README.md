@@ -3,6 +3,20 @@
 [![Build Status](https://dev.azure.com/powers-hell/Intune.USB.Creator/_apis/build/status/tabs-not-spaces.Intune.USB.Creator?branchName=master)](https://dev.azure.com/powers-hell/Intune.USB.Creator/_build/latest?definitionId=31&branchName=master)
 ![PowerShell Gallery](https://img.shields.io/powershellgallery/v/Intune.USB.Creator.svg?style=flat&logo=powershell&label=PSGallery%20Version)
 ![PSGallery Downloads](https://img.shields.io/powershellgallery/dt/Intune.USB.Creator.svg?style=flat&logo=powershell&label=PSGallery%20Downloads)
+
+## ⚠⚠⚠ BEFORE RAISING ANY ISSUES ⚠⚠⚠
+
+Without a doubt the most common "issue" raised refers to the following error that people recieve while trying to capture the Autopilot config file.
+
+```
+WARNING: Could not load type 'System.Security.Cryptography.SHA256Cng' from assembly 'System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.
+```
+
+Please note, this is NOT an issue, but the way to resolve it is simple - you are missing the msal.ps module in the PowerShell 5.1 & Core module locations. Open up BOTH terminals and install the msal.ps module before attempting to use this tool.
+
+Any issues raised regarding this "error" will be immediately closed moving forward.
+
+
 ## Summary
 
 A module containing tools to assist with the creation of a bootable WinPE USB used to provision devices for enrollment to Intune.
@@ -13,6 +27,7 @@ A module containing tools to assist with the creation of a bootable WinPE USB us
 - [PowerShell 7](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-windows?view=powershell-7)
 - [WindowsAutoPilotIntune](https://www.powershellgallery.com/packages/WindowsAutoPilotIntune) - Installed automatically if missing
 - [Microsoft.Graph.Intune](https://www.powershellgallery.com/packages/Microsoft.Graph.Intune/) - Installed automatically if missing
+- [MSAL.PS](https://www.powershellgallery.com/packages/MSAL.PS) - Install this manually for both PowerShell 5.1 AND 7.
 - A copy of Windows 10 (Multi-format ISO recommended)
 
 ## How to use
