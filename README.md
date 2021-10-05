@@ -67,7 +67,7 @@ If time permits, I'm looking to add the following additions to the solution:
 
 ## Caveat Emptor
 
-I'm providing this solution as a tool as an educational tool to assist the IT-Pro community with absolutely ZERO warranties or guarantees - I know it works for me, but if it doesn't for you - read the code and fix it..
+I'm providing this solution as an educational tool to assist the IT-Pro community with absolutely ZERO warranties or guarantees - I know it works for me, but if it doesn't for you - read the code and fix it..
 
 If you find a problem and want to contribute - please do! I love community involvement and will be as active as my schedule allows.
 
