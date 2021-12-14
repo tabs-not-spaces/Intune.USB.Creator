@@ -1,2 +1,2 @@
 {{NewVersion}}
-  - Updated Invoke-Provision to allow driver bootstrapping. Should allow all devices to work seamlessly with the tool. 🍻🍻🍻
+  - "diskNum" parameter will now correctly (and silently) pass the selected disk number with no user interaction required.
