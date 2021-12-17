@@ -7,3 +7,6 @@ bin
 *.zip
 localenv.ps1
 !module.nuspec
+*.sqlite
+*.suo
+*.gitignore
