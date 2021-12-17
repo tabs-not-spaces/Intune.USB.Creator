@@ -147,7 +147,7 @@ exit
 }
 function Get-SystemDeviceId {
     try {
-       $dataDrives = $drives | ?{ ($_.BusType -ne "USB") -and ($_.DeviceId -ne $USBDrive)}
+       $dataDrives = $drives | ?{ $_.BusType -ne "USB"}
        if (@($DataDrives).count -eq 1) {
             $targetDrive = $DataDrives[0].DeviceId
             return $targetDrive
