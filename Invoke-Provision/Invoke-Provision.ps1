@@ -145,24 +145,9 @@ exit
         throw $_
     }
 }
-function Get-USBDeviceId {
-    try {
-        $USBDrives = $drives | ?{ $_.BusType -eq "USB"}
-        if (@($USBDrives).count -eq 1) {
-            $USBDrive = $USBDrives[0].DeviceId
-            return $USBDrive
-       }
-       else {
-            throw "Error while getting DeviceId of USB Stick. No additional USB storage devices must be attached"
-       }
-    }
-    catch {
-        throw $_
-    }
-}
 function Get-SystemDeviceId {
     try {
-       $dataDrives = $drives | ?{ $_.BusType -ne "USB"}
+       $dataDrives = $drives | ?{ ($_.BusType -ne "USB") -and ($_.DeviceId -ne $USBDrive)}
        if (@($DataDrives).count -eq 1) {
             $targetDrive = $DataDrives[0].DeviceId
             return $targetDrive
@@ -464,7 +449,8 @@ try {
     #endregion
     #region Configure drive partitions
     Write-Host "`nConfiguring drive partitions.." -ForegroundColor Yellow
-    $drives = @(Get-PhysicalDisk)
+    $USBDrive = (Get-Partition -DriveLetter "$((Get-Item -Path $MyInvocation.MyCommand.Path).PSDrive)" | Get-Disk).Number
+    $drives = @(Get-PhysicalDisk | ? {$_.DeviceId -ne $USBDrive})
     $targetDrive = Get-SystemDeviceId
     Set-DrivePartition -winPEDrive $usb.winPEDrive -targetDrive $targetDrive
     #endregion
@@ -547,7 +533,6 @@ catch {
 }
 finally {
     $sw.stop()
-    $USBDrive = Get-USBDeviceId
     if ($exitEarly) {
         $errorMsg = $null
     }
