@@ -9,6 +9,8 @@ trigger:
       - /.gitignore
       - /readme.md
       - /.tests
+      
+pr: none
 
 stages:
   - stage: Build
