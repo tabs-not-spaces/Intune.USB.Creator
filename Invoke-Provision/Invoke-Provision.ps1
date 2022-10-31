@@ -511,14 +511,14 @@ try {
     Write-Host "`nSetting the boot environment.." -ForegroundColor Yellow
     Invoke-Cmdline -application "$($usb.scRoot)Windows\System32\bcdboot" -argumentList "$($usb.scRoot)Windows /s s: /f all"
     #endregion
-    #region Copying over unattended.xml
-    Write-Host "`nLooking for unattented.xml.." -ForegroundColor Yellow
-    if (Test-Path "$($usb.winPESource)scripts\unattended.xml" -ErrorAction SilentlyContinue) {
+    #region Copying over unattend.xml
+    Write-Host "`nLooking for unattend.xml.." -ForegroundColor Yellow
+    if (Test-Path "$($usb.winPESource)scripts\unattend.xml" -ErrorAction SilentlyContinue) {
         Write-Host "Found it! Copying over to scratch drive.." -ForegroundColor Green
         if(-not (Test-Path "$($usb.scRoot)Windows\Panther" -ErrorAction SilentlyContinue)){
             New-Item -Path "$($usb.scRoot)Windows\Panther" -ItemType Directory -Force | Out-Null
          }
-        Copy-Item -Path "$($usb.winPESource)\scripts\unattended.xml" -Destination "$($usb.scRoot)Windows\Panther\unattended.xml" | Out-Null
+        Copy-Item -Path "$($usb.winPESource)\scripts\unattend.xml" -Destination "$($usb.scRoot)Windows\Panther\unattend.xml" | Out-Null
     }
     else {
         Write-Host "Nothing found. Moving on.." -ForegroundColor Red
