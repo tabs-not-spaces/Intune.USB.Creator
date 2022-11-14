@@ -4,7 +4,7 @@ function Get-DiskToUse {
         [parameter(Mandatory = $false)]
         [int32]$diskNum
     )
-    $diskList = Get-Disk | Where-Object { $_.Bustype -notin @('SATA', 'NVMe', 'RAID') }
+    $diskList = Get-Disk | Where-Object -FilterScript {$_.Bustype -Eq "USB"}
     $disks = $diskList | Select-Object Number, @{Name = 'TotalSize(GB)'; Expression = { [double]($_.Size / 1GB).ToString("#.##") } }, @{Name = "Name"; Expression = { $_.FriendlyName } } | Sort-Object -Property Number
     if (!$diskNum) {
         $table = $disks | Format-Table | Out-Host
